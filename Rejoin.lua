@@ -1,4 +1,4 @@
-local defaultTime = 14400 -- Waktu dalam detik
+local defaultTime = 10800 -- Waktu dalam detik
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")

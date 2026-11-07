@@ -6,6 +6,7 @@ local CFG = {
 	retryDelay = 3,            -- Jeda antar percobaan (detik, bertambah tiap percobaan)
 	teleportTimeout = 30,      -- Kalau teleport menggantung segini lama, dianggap gagal
 	allowPublicFallback = false, -- true = kalau private server gagal terus, pindah ke publik
+	rejoinSameServer = true,   -- true = server publik juga dicoba balik ke server yang sama
 	warn1 = 60,                -- Notifikasi peringatan pertama (detik sebelum teleport)
 	warn2 = 10,                -- Notifikasi peringatan kedua
 }
@@ -84,6 +85,7 @@ end
 local placeId = game.PlaceId
 local jobId = game.JobId
 local isPrivate = game.PrivateServerId ~= ""
+local sameServer = isPrivate or CFG.rejoinSameServer
 
 local alive = true
 local targetTime = 0
@@ -132,10 +134,10 @@ local function handleFail(reason)
 	if not alive or retryPending then return end
 
 	if attempts >= CFG.maxRetries then
-		if isPrivate and CFG.allowPublicFallback then
-			isPrivate = false
+		if sameServer and (not isPrivate or CFG.allowPublicFallback) then
+			sameServer = false
 			attempts = 0
-			notify("Private server gagal. Pindah ke server publik...")
+			notify("Gagal kembali ke server yang sama. Pindah ke server publik...")
 			retryPending = true
 			task.delay(2, function()
 				retryPending = false
@@ -165,8 +167,8 @@ attemptTeleport = function()
 	queueSelf()
 
 	local ok, err = pcall(function()
-		if isPrivate then
-			-- Kembali ke server private yang sama (JobId sama)
+		if sameServer then
+			-- Kembali ke server yang sama (JobId sama)
 			TeleportService:TeleportToPlaceInstance(placeId, jobId, player)
 		else
 			TeleportService:Teleport(placeId, player)

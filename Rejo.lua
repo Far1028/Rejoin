@@ -116,11 +116,17 @@ local function queueSelf()
 		parts[#parts + 1] = k .. "=" .. tostring(v)
 	end
 
+	local lvl = 0
+	while SRC:find("]" .. string.rep("=", lvl) .. "]", 1, true) do
+		lvl += 1
+	end
+	local eq = string.rep("=", lvl)
+
 	local code = table.concat({
 		"if game.PlaceId ~= " .. tostring(placeId) .. " then return end",
 		"local g = (getgenv and getgenv()) or _G",
 		"g.__TimerCfg = {" .. table.concat(parts, ",") .. "}",
-		"g.__TimerSrc = [==[" .. SRC .. "]==]",
+		"g.__TimerSrc = [" .. eq .. "[" .. SRC .. "]" .. eq .. "]",
 		"loadstring(g.__TimerSrc)()",
 	}, "\n")
 
